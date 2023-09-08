@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
+
 Base = declarative_base()
 
 class User(Base):
@@ -15,7 +16,6 @@ class User(Base):
     time_entries = relationship('TimeEntry', back_populates='user')
     reports = relationship('Report', back_populates='user')
 
-
 class Task(Base):
     __tablename__ = 'tasks'
 
@@ -26,10 +26,8 @@ class Task(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
-    
     user = relationship('User', back_populates='tasks')
     time_entries = relationship('TimeEntry', back_populates='task')
-
 
 class TimeEntry(Base):
     __tablename__ = 'time_entries'
@@ -41,10 +39,8 @@ class TimeEntry(Base):
     end_time = Column(DateTime)
     duration_minutes = Column(Integer)
 
-    # Define relationships
     user = relationship('User', back_populates='time_entries')
     task = relationship('Task', back_populates='time_entries')
-
 
 class Report(Base):
     __tablename__ = 'reports'
@@ -55,5 +51,4 @@ class Report(Base):
     description = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-  
     user = relationship('User', back_populates='reports')
