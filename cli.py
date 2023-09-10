@@ -1,6 +1,8 @@
-from models import User, Task
+from models import User, Task, TimeEntry, Report  
 from dbstuff import session
-# from mycode import session
+from datetime import datetime
+
+#empty list to keep track of tasks 
 tasks = []
 
 # Function to create a new user
@@ -14,8 +16,12 @@ def create_user(username, password):
     session.add(user)
     session.commit()
     print(f"🖨️ ✅ User {username} created successfully. ✅ ")
-    return user
 
+    # Create an entry in the reports table to track user creation
+    report = Report(user_id=user.user_id, title="User Created", description=f"User {username} was created.")
+    session.add(report)
+    session.commit()
+    return user
 
 # Function to authenticate and return user_id
 def login(username, password):
@@ -34,6 +40,16 @@ def create_task(user_id, title):
         session.commit()
         tasks.append(task)
         print(f"🖨️ ✅ Task '{title}' created successfully. Task ID: {task.task_id} ✅ ")
+
+        # Create an entry in the time_entries table to track time spent on this task
+        time_entry = TimeEntry(user_id=user_id, task_id=task.task_id, start_time=datetime.utcnow())
+        session.add(time_entry)
+        session.commit()
+
+        # Create an entry in the reports table to track task creation
+        report = Report(user_id=user_id, title="Task Created", description=f"Task '{title}' was created.")
+        session.add(report)
+        session.commit()
     else:
         print(f"🖨️ User with ID '{user_id}' does not exist. Please create a user first.")
 
@@ -75,20 +91,31 @@ def generate_report():
         for task in tasks:
             print(f"  Task ID: {task.task_id}, Title: {task.title}")
 
-
+# Function to delete a user and associated tasks
 def delete_user(username, password):
     user = session.query(User).filter_by(username=username, password=password).first()
     if user:
-        # Delete the user's tasks first
+        # Delete the user's time entries first
+        time_entries = session.query(TimeEntry).filter_by(user_id=user.user_id).all()
+        for time_entry in time_entries:
+            session.delete(time_entry)
+
+        # Delete the user's reports
+        reports = session.query(Report).filter_by(user_id=user.user_id).all()
+        for report in reports:
+            session.delete(report)
+
+        # Delete the user's tasks
         tasks = session.query(Task).filter_by(user_id=user.user_id).all()
         for task in tasks:
             session.delete(task)
 
         session.delete(user)
         session.commit()
-        print(f"🖨️ User '{username}' and associated tasks deleted successfully.")
+        print(f"🖨️ User '{username}' and associated tasks, reports, and time entries deleted successfully.")
     else:
         print("🖨️ User not found or password is incorrect.")
+
 
 
 if __name__ == '__main__':
@@ -133,22 +160,15 @@ if __name__ == '__main__':
                 delete_task(username, title)
             else:
                 print(" ❌ User not found. ❌ ")
-                
         elif choice == '5':
             username = input("🗣️ Enter your username: ")
-            user = session.query(User).filter_by(username=username).first()
             display_tasks(username)
-
         elif choice == '6':
             generate_report()
-
         elif choice == '7':
             username = input("🗣️ Enter username: ")
             password = input("🗣️ Enter password: ")
             delete_user(username, password)
-
         elif choice == '8':
             print(" 😘 Goodbye!")
-
-
             break

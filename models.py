@@ -12,6 +12,7 @@ class User(Base):
     username = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
 
+    # Relationships
     tasks = relationship('Task', back_populates='user')
     time_entries = relationship('TimeEntry', back_populates='user')
     reports = relationship('Report', back_populates='user')
@@ -26,6 +27,7 @@ class Task(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
+    # Relationships
     user = relationship('User', back_populates='tasks')
     time_entries = relationship('TimeEntry', back_populates='task')
 
@@ -39,6 +41,7 @@ class TimeEntry(Base):
     end_time = Column(DateTime)
     duration_minutes = Column(Integer)
 
+    # Relationships
     user = relationship('User', back_populates='time_entries')
     task = relationship('Task', back_populates='time_entries')
 
@@ -51,4 +54,5 @@ class Report(Base):
     description = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+    # Relationship
     user = relationship('User', back_populates='reports')
